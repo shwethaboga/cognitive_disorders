@@ -1,0 +1,213 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.*;
+
+public class Disorders extends JFrame {
+    private JLabel lblDisorderId, lblDisorderName, lblDescription;
+    private JTextField txtDisorderId, txtDisorderName, txtDescription;
+    private JButton btnInsert, btnModify, btnDelete, btnDisplay;
+    private JTextArea displayTextArea;
+    private Connection connection;
+    private PreparedStatement preparedStatement;
+
+    public Disorders() {
+        initializeUI();
+        initializeDatabaseConnection();
+    }
+
+    private void initializeUI() {
+       // setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setTitle("Cognitive Disorders");
+        setVisible(true);
+        lblDisorderId = new JLabel("Disorder ID:");
+        lblDisorderName = new JLabel("Disorder Name:");
+        lblDescription = new JLabel("Description:");
+
+        txtDisorderId = new JTextField(10);
+        txtDisorderName = new JTextField(10);
+        txtDescription = new JTextField(10);
+         
+        
+        
+        btnInsert = new JButton("Insert");
+        btnModify = new JButton("Modify");
+        btnDelete = new JButton("Delete");
+        btnDisplay = new JButton("Display");
+
+        setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        add(lblDisorderId, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        add(txtDisorderId, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        add(lblDisorderName, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        add(txtDisorderName, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        add(lblDescription, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        add(txtDescription, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 2;
+        add(btnInsert, gbc);
+
+        gbc.gridx = 2;
+        gbc.gridy = 5;
+        add(btnModify, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        add(btnDelete, gbc);
+
+        gbc.gridx = 2;
+        gbc.gridy = 6;
+        gbc.gridwidth = 2;
+        add(btnDisplay, gbc);
+        
+        displayTextArea = new JTextArea(10, 30);
+        displayTextArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(displayTextArea);
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        gbc.gridwidth = 2;
+        add(scrollPane, gbc);
+        setLocationRelativeTo(null);
+
+
+
+        pack();
+
+        btnInsert.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                insertData();
+            }
+        });
+
+        btnModify.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                modifyData();
+            }
+        });
+
+        btnDelete.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                deleteData();
+            }
+        });
+
+        btnDisplay.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                displayData();
+            }
+        });
+    }
+
+    private void initializeDatabaseConnection() {
+        String url = "jdbc:oracle:thin:@localhost:1521:xe";
+        String username = "shwetha";
+        String password = "shwetha";
+
+        try {
+            connection = DriverManager.getConnection(url, username, password);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void insertData() {
+        String query = "INSERT INTO CognitiveDisorders (disorder_id, disorder_name, description) VALUES (?, ?, ?)";
+
+        try {
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, txtDisorderId.getText());
+            preparedStatement.setString(2, txtDisorderName.getText());
+            preparedStatement.setString(3, txtDescription.getText());
+            preparedStatement.executeUpdate();
+            clearFields();
+            JOptionPane.showMessageDialog(this, "Data inserted successfully.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void modifyData() {
+        String query = "UPDATE CognitiveDisorders SET disorder_name=?, description=? WHERE disorder_id=?";
+
+        try {
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, txtDisorderName.getText());
+            preparedStatement.setString(2, txtDescription.getText());
+            preparedStatement.setString(3, txtDisorderId.getText());
+            preparedStatement.executeUpdate();
+            clearFields();
+            JOptionPane.showMessageDialog(this, "Data modified successfully.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void deleteData() {
+        String query = "DELETE FROM CognitiveDisorders WHERE disorder_id=?";
+
+        try {
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, txtDisorderId.getText());
+            preparedStatement.executeUpdate();
+            clearFields();
+            JOptionPane.showMessageDialog(this, "Data deleted successfully.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void displayData() {
+        String query = "SELECT * FROM CognitiveDisorders";
+
+        try {
+            preparedStatement = connection.prepareStatement(query);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            StringBuilder display = new StringBuilder("Disorder ID\tDisorder Name\tDescription\n");
+            while (resultSet.next()) {
+                String disorderId = resultSet.getString("disorder_id");
+                String disorderName = resultSet.getString("disorder_name");
+                String description = resultSet.getString("description");
+                display.append(disorderId).append("\t").append(disorderName).append("\t").append(description).append("\n");
+            }
+            JOptionPane.showMessageDialog(this, display.toString());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void clearFields() {
+        txtDisorderId.setText("");
+        txtDisorderName.setText("");
+        txtDescription.setText("");
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new Disorders().setVisible(true);
+            }
+        });
+    }
+}

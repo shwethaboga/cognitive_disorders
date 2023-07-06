@@ -1,0 +1,331 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.*;
+import java.util.ArrayList;
+
+public class CognitiveDisordersManagement extends JFrame {
+    private static final String DB_URL = "jdbc:oracle:thin:@localhost:1521:xe";
+    private static final String USER = "shwetha";
+    private static final String PASS = "shwetha";
+
+    private JTextField kidIdTextField;
+    private JTextField nameTextField;
+    private JTextField dobTextField;
+    private JTextField genderTextField;
+    private JTextField contactNumberTextField;
+
+    private JTextArea displayTextArea;
+
+    private JButton insertButton;
+    private JButton updateButton;
+    private JButton deleteButton;
+    private JButton displayButton;
+
+    private ArrayList<Kid> kidsList;
+
+    public CognitiveDisordersManagement() {
+        setTitle("Cognitive Disorders Management");
+        //setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new GridBagLayout());
+        setVisible(true);
+
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.insets = new Insets(5, 5, 5, 5);
+
+        JLabel kidIdLabel = new JLabel("Kid ID:");
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        add(kidIdLabel, constraints);
+
+        kidIdTextField = new JTextField(15);
+        constraints.gridx = 1;
+        constraints.gridy = 0;
+        add(kidIdTextField, constraints);
+
+        JLabel nameLabel = new JLabel("Name:");
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        add(nameLabel, constraints);
+
+        nameTextField = new JTextField(15);
+        constraints.gridx = 1;
+        constraints.gridy = 1;
+        add(nameTextField, constraints);
+
+        JLabel dobLabel = new JLabel("Date of Birth:");
+        constraints.gridx = 0;
+        constraints.gridy = 2;
+        add(dobLabel, constraints);
+
+        dobTextField = new JTextField(15);
+        constraints.gridx = 1;
+        constraints.gridy = 2;
+        add(dobTextField, constraints);
+
+        JLabel genderLabel = new JLabel("Gender:");
+        constraints.gridx = 0;
+        constraints.gridy = 3;
+        add(genderLabel, constraints);
+
+        genderTextField = new JTextField(15);
+        constraints.gridx = 1;
+        constraints.gridy = 3;
+        add(genderTextField, constraints);
+
+        JLabel contactNumberLabel = new JLabel("Contact Number:");
+        constraints.gridx = 0;
+        constraints.gridy = 4;
+        add(contactNumberLabel, constraints);
+
+        contactNumberTextField = new JTextField(15);
+        constraints.gridx = 1;
+        constraints.gridy = 4;
+        add(contactNumberTextField, constraints);
+
+        insertButton = new JButton("Insert");
+        constraints.gridx = 0;
+        constraints.gridy = 5;
+        add(insertButton, constraints);
+
+        updateButton = new JButton("Update");
+        constraints.gridx = 1;
+        constraints.gridy = 5;
+        add(updateButton, constraints);
+
+        deleteButton = new JButton("Delete");
+        constraints.gridx = 0;
+        constraints.gridy = 6;
+        add(deleteButton, constraints);
+
+        displayButton = new JButton("Display");
+        constraints.gridx = 1;
+        constraints.gridy = 6;
+        add(displayButton, constraints);
+
+        displayTextArea = new JTextArea(10, 30);
+        displayTextArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(displayTextArea);
+        constraints.gridx = 0;
+        constraints.gridy = 7;
+        constraints.gridwidth = 2;
+        add(scrollPane, constraints);
+
+        pack();
+        setLocationRelativeTo(null);
+
+        insertButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                insertData();
+            }
+        });
+
+        updateButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                updateData();
+            }
+        });
+
+        deleteButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                deleteData();
+            }
+        });
+
+        displayButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                displayData();
+            }
+        });
+    }
+
+    private Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(DB_URL, USER, PASS);
+    }
+
+    private void insertData() {
+        try (Connection conn = getConnection()) {
+            String kidId = kidIdTextField.getText();
+            String name = nameTextField.getText();
+            String dob = dobTextField.getText();
+            String gender = genderTextField.getText();
+            String contactNumber = contactNumberTextField.getText();
+
+            Kid kid = new Kid(kidId, name, dob, gender, contactNumber);
+            insertKid(conn, kid);
+
+            JOptionPane.showMessageDialog(this, "Data inserted successfully!");
+            clearFields();
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error occurred while inserting data!");
+        }
+    }
+
+    private void insertKid(Connection conn, Kid kid) throws SQLException {
+        String query = "INSERT INTO Kids (kid_id, name, date_of_birth, gender, Contact_Number) VALUES (?, ?, ?, ?, ?)";
+        PreparedStatement statement = conn.prepareStatement(query);
+        statement.setString(1, kid.getKidId());
+        statement.setString(2, kid.getName());
+        statement.setString(3, kid.getDateOfBirth());
+        statement.setString(4, kid.getGender());
+        statement.setString(5, kid.getContactNumber());
+        statement.executeUpdate();
+    }
+
+    private void updateData() {
+        try (Connection conn = getConnection()) {
+            String kidId = kidIdTextField.getText();
+            String name = nameTextField.getText();
+            String dob = dobTextField.getText();
+            String gender = genderTextField.getText();
+            String contactNumber = contactNumberTextField.getText();
+
+            Kid kid = new Kid(kidId, name, dob, gender, contactNumber);
+            updateKid(conn, kid);
+
+            JOptionPane.showMessageDialog(this, "Data updated successfully!");
+            clearFields();
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error occurred while updating data!");
+        }
+    }
+
+    private void updateKid(Connection conn, Kid kid) throws SQLException {
+        String query = "UPDATE Kids SET name = ?, date_of_birth = ?, gender = ?, Contact_Number = ? WHERE kid_id = ?";
+        PreparedStatement statement = conn.prepareStatement(query);
+        statement.setString(1, kid.getName());
+        statement.setString(2, kid.getDateOfBirth());
+        statement.setString(3, kid.getGender());
+        statement.setString(4, kid.getContactNumber());
+        statement.setString(5, kid.getKidId());
+        statement.executeUpdate();
+    }
+
+    private void deleteData() {
+        try (Connection conn = getConnection()) {
+            String kidId = kidIdTextField.getText();
+
+            deleteKid(conn, kidId);
+
+            JOptionPane.showMessageDialog(this, "Data deleted successfully!");
+            clearFields();
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error occurred while deleting data!");
+        }
+    }
+
+    private void deleteKid(Connection conn, String kidId) throws SQLException {
+        String query = "DELETE FROM Kids WHERE kid_id = ?";
+        PreparedStatement statement = conn.prepareStatement(query);
+        statement.setString(1, kidId);
+        statement.executeUpdate();
+    }
+
+    private void displayData() {
+        try (Connection conn = getConnection()) {
+            kidsList = getKids(conn);
+            displayTextArea.setText("");
+
+            for (Kid kid : kidsList) {
+                displayTextArea.append("Kid ID: " + kid.getKidId() + "\n");
+                displayTextArea.append("Name: " + kid.getName() + "\n");
+                displayTextArea.append("Date of Birth: " + kid.getDateOfBirth() + "\n");
+                displayTextArea.append("Gender: " + kid.getGender() + "\n");
+                displayTextArea.append("Contact Number: " + kid.getContactNumber() + "\n");
+                displayTextArea.append("\n");
+            }
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error occurred while fetching data!");
+        }
+    }
+
+    private ArrayList<Kid> getKids(Connection conn) throws SQLException {
+        ArrayList<Kid> kids = new ArrayList<>();
+        String query = "SELECT * FROM Kids";
+        Statement statement = conn.createStatement();
+        ResultSet resultSet = statement.executeQuery(query);
+
+        while (resultSet.next()) {
+            String kidId = resultSet.getString("kid_id");
+            String name = resultSet.getString("name");
+            String dob = resultSet.getString("date_of_birth");
+            String gender = resultSet.getString("gender");
+            String contactNumber = resultSet.getString("Contact_Number");
+
+            Kid kid = new Kid(kidId, name, dob, gender, contactNumber);
+            kids.add(kid);
+        }
+
+        return kids;
+    }
+
+    private void clearFields() {
+        kidIdTextField.setText("");
+        nameTextField.setText("");
+        dobTextField.setText("");
+        genderTextField.setText("");
+        contactNumberTextField.setText("");
+    }
+
+    public static void main(String[] args) {
+        try {
+            Class.forName("oracle.jdbc.driver.OracleDriver");
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+            return;
+        }
+
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                CognitiveDisordersManagement form = new CognitiveDisordersManagement();
+                form.setVisible(true);
+            }
+        });
+    }
+}
+
+class Kid {
+    private String kidId;
+    private String name;
+    private String dateOfBirth;
+    private String gender;
+    private String contactNumber;
+
+    public Kid(String kidId, String name, String dateOfBirth, String gender, String contactNumber) {
+        this.kidId = kidId;
+        this.name = name;
+        this.dateOfBirth = dateOfBirth;
+        this.gender = gender;
+        this.contactNumber = contactNumber;
+    }
+
+    public String getKidId() {
+        return kidId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public String getContactNumber() {
+        return contactNumber;
+    }
+}
+

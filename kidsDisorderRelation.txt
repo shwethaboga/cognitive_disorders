@@ -1,0 +1,241 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.*;
+
+public class KidsDisRelation extends JFrame {
+    private JTextField relationshipIdTextField, kidIdTextField, disorderIdTextField, diagnosisDateTextField;
+
+    public KidsDisRelation() {
+        setTitle("Kids Disorder Relationship Management");
+        //setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new GridBagLayout());
+        setVisible(true);
+
+        // Initialize components
+        JLabel relationshipIdLabel = new JLabel("Relationship ID:");
+        JLabel kidIdLabel = new JLabel("Kid ID:");
+        JLabel disorderIdLabel = new JLabel("Disorder ID:");
+        JLabel diagnosisDateLabel = new JLabel("Diagnosis Date:");
+
+        relationshipIdTextField = new JTextField(10);
+        kidIdTextField = new JTextField(10);
+        disorderIdTextField = new JTextField(10);
+        diagnosisDateTextField = new JTextField(10);
+
+        JButton insertButton = new JButton("Insert");
+        JButton updateButton = new JButton("Update");
+        JButton deleteButton = new JButton("Delete");
+        JButton displayButton = new JButton("Display");
+
+        // Add components to the frame using GridBagLayout
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        add(relationshipIdLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        add(relationshipIdTextField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        add(kidIdLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        add(kidIdTextField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        add(disorderIdLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        add(disorderIdTextField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        add(diagnosisDateLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        add(diagnosisDateTextField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        add(insertButton, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 4;
+        add(updateButton, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        add(deleteButton, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 5;
+        add(displayButton, gbc);
+
+        pack();
+
+        // Button actions
+        insertButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                insertData();
+            }
+        });
+
+        updateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateData();
+            }
+        });
+
+        deleteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                deleteData();
+            }
+        });
+
+        displayButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                displayData();
+            }
+        });
+    }
+
+    private Connection getConnection() throws SQLException {
+        String url = "jdbc:oracle:thin:@localhost:1521:xe";
+        String username = "shwetha";
+        String password = "shwetha";
+        return DriverManager.getConnection(url, username, password);
+    }
+
+    private void insertData() {
+        try (Connection conn = getConnection()) {
+            String relationshipId = relationshipIdTextField.getText();
+            String kidId = kidIdTextField.getText();
+            String disorderId = disorderIdTextField.getText();
+            String diagnosisDate = diagnosisDateTextField.getText();
+
+            insertRelation(conn, relationshipId, kidId, disorderId, diagnosisDate);
+            clearFields();
+            JOptionPane.showMessageDialog(this, "Data inserted successfully!");
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error occurred while inserting data!");
+        }
+    }
+
+    private void insertRelation(Connection conn, String relationshipId, String kidId, String disorderId, String diagnosisDate) throws SQLException {
+        String query = "INSERT INTO KidsDisRelation (relationship_id, kid_id, disorder_id, diagnosis_date) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
+            statement.setString(1, relationshipId);
+            statement.setString(2, kidId);
+            statement.setString(3, disorderId);
+            statement.setString(4, diagnosisDate);
+            statement.executeUpdate();
+        }
+    }
+
+    private void updateData() {
+        try (Connection conn = getConnection()) {
+            String relationshipId = relationshipIdTextField.getText();
+            String kidId = kidIdTextField.getText();
+            String disorderId = disorderIdTextField.getText();
+            String diagnosisDate = diagnosisDateTextField.getText();
+
+            updateRelation(conn, relationshipId, kidId, disorderId, diagnosisDate);
+            clearFields();
+            JOptionPane.showMessageDialog(this, "Data updated successfully!");
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error occurred while updating data!");
+        }
+    }
+
+    private void updateRelation(Connection conn, String relationshipId, String kidId, String disorderId, String diagnosisDate) throws SQLException {
+        String query = "UPDATE KidsDisRelation SET kid_id = ?, disorder_id = ?, diagnosis_date = ? WHERE relationship_id = ?";
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
+            statement.setString(1, kidId);
+            statement.setString(2, disorderId);
+            statement.setString(3, diagnosisDate);
+            statement.setString(4, relationshipId);
+            statement.executeUpdate();
+        }
+    }
+
+    private void deleteData() {
+        try (Connection conn = getConnection()) {
+            String relationshipId = relationshipIdTextField.getText();
+
+            deleteRelation(conn, relationshipId);
+            clearFields();
+            JOptionPane.showMessageDialog(this, "Data deleted successfully!");
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error occurred while deleting data!");
+        }
+    }
+
+    private void deleteRelation(Connection conn, String relationshipId) throws SQLException {
+        String query = "DELETE FROM KidsDisRelation WHERE relationship_id = ?";
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
+            statement.setString(1, relationshipId);
+            statement.executeUpdate();
+        }
+    }
+
+    private void displayData() {
+        try (Connection conn = getConnection()) {
+            String query = "SELECT * FROM KidsDisRelation";
+            try (Statement statement = conn.createStatement();
+                 ResultSet resultSet = statement.executeQuery(query)) {
+                StringBuilder data = new StringBuilder();
+                while (resultSet.next()) {
+                    String relationshipId = resultSet.getString("relationship_id");
+                    String kidId = resultSet.getString("kid_id");
+                    String disorderId = resultSet.getString("disorder_id");
+                    String diagnosisDate = resultSet.getString("diagnosis_date");
+                    data.append("Relationship ID: ").append(relationshipId).append("\n")
+                            .append("Kid ID: ").append(kidId).append("\n")
+                            .append("Disorder ID: ").append(disorderId).append("\n")
+                            .append("Diagnosis Date: ").append(diagnosisDate).append("\n\n");
+                }
+                JTextArea displayTextArea = new JTextArea(data.toString(), 10, 40);
+                displayTextArea.setEditable(false);
+                JScrollPane scrollPane = new JScrollPane(displayTextArea);
+                JOptionPane.showMessageDialog(this, scrollPane, "Kids Disorder Relationship Data", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error occurred while displaying data!");
+        }
+    }
+
+    private void clearFields() {
+        relationshipIdTextField.setText("");
+        kidIdTextField.setText("");
+        disorderIdTextField.setText("");
+        diagnosisDateTextField.setText("");
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                KidsDisRelation kidsDisRelation = new KidsDisRelation();
+                kidsDisRelation.setVisible(true);
+            }
+        });
+    }
+}
